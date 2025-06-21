@@ -23,7 +23,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 
 class Group(Base):
-    __tablename__ = "group"
+    __tablename__ = "groups"
 
     id = Column(Text, unique=True, primary_key=True)
     user_id = Column(Text)
