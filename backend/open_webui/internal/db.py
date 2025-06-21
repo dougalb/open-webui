@@ -23,6 +23,16 @@ from sqlalchemy.pool import QueuePool, NullPool
 from sqlalchemy.sql.type_api import _T
 from typing_extensions import Self
 
+# Patch Oracle dialect to add missing _json_deserializer and _json_serializer attributes
+try:
+    from sqlalchemy.dialects.oracle.base import OracleDialect
+    if not hasattr(OracleDialect, '_json_deserializer'):
+        OracleDialect._json_deserializer = lambda self, value: json.loads(value)
+    if not hasattr(OracleDialect, '_json_serializer'):
+        OracleDialect._json_serializer = lambda self, value: json.dumps(value)
+except ImportError:
+    pass
+
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["DB"])
 
@@ -36,7 +46,11 @@ class JSONField(types.TypeDecorator):
 
     def process_result_value(self, value: Optional[_T], dialect: Dialect) -> Any:
         if value is not None:
-            return json.loads(value)
+            # Handle Oracle dialect that doesn't have _json_deserializer
+            if hasattr(dialect, '_json_deserializer') and dialect._json_deserializer:
+                return dialect._json_deserializer(value)
+            else:
+                return json.loads(value)
 
     def copy(self, **kw: Any) -> Self:
         return JSONField(self.impl.length)
@@ -85,6 +99,24 @@ if "sqlite" in SQLALCHEMY_DATABASE_URL:
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )
+elif "oracle" in SQLALCHEMY_DATABASE_URL:
+    # Oracle-specific configuration
+    if DATABASE_POOL_SIZE > 0:
+        engine = create_engine(
+            SQLALCHEMY_DATABASE_URL,
+            pool_size=DATABASE_POOL_SIZE,
+            max_overflow=DATABASE_POOL_MAX_OVERFLOW,
+            pool_timeout=DATABASE_POOL_TIMEOUT,
+            pool_recycle=DATABASE_POOL_RECYCLE,
+            pool_pre_ping=True,
+            poolclass=QueuePool
+        )
+    else:
+        engine = create_engine(
+            SQLALCHEMY_DATABASE_URL, 
+            pool_pre_ping=True, 
+            poolclass=NullPool
+        )
 else:
     if DATABASE_POOL_SIZE > 0:
         engine = create_engine(

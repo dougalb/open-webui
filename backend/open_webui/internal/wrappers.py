@@ -43,6 +43,17 @@ class ReconnectingPostgresqlDatabase(CustomReconnectMixin, PostgresqlDatabase):
 
 
 def register_connection(db_url):
+    # Skip Oracle connections for Peewee - Oracle support is SQLAlchemy only
+    if "oracle" in db_url.lower():
+        log.info("Oracle database detected - skipping Peewee connection (SQLAlchemy only)")
+        # Return a mock database object that satisfies the migration check
+        class MockOracleDB:
+            def is_closed(self):
+                return True
+            def close(self):
+                pass
+        return MockOracleDB()
+    
     db = connect(db_url, unquote_user=True, unquote_password=True)
     if isinstance(db, PostgresqlDatabase):
         # Enable autoconnect for SQLite databases, managed by Peewee

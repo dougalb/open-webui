@@ -270,6 +270,10 @@ DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{DATA_DIR}/webui.db")
 if "postgres://" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://")
 
+# Handle Oracle URL format
+if "oracle://" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("oracle://", "oracle+oracledb://")
+
 DATABASE_SCHEMA = os.environ.get("DATABASE_SCHEMA", None)
 
 DATABASE_POOL_SIZE = os.environ.get("DATABASE_POOL_SIZE", 0)

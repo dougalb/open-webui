@@ -17,7 +17,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 
 class Function(Base):
-    __tablename__ = "function"
+    __tablename__ = "functions"
 
     id = Column(String, primary_key=True)
     user_id = Column(String)
