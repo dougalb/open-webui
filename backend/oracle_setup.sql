@@ -151,7 +151,7 @@ CREATE TABLE model (
 CREATE TABLE files (
     id VARCHAR2(36) PRIMARY KEY,               -- UUID
     user_id VARCHAR2(36) NOT NULL,             -- UUID, not null
-    hash VARCHAR2(128) NOT NULL,               -- File hash, not null
+    hash VARCHAR2(128),                        -- File hash
     filename VARCHAR2(255) NOT NULL,           -- Shortened for efficiency, not null
     path VARCHAR2(1000),                       -- Increased from default but usually not >1000
     data CLOB,                                 -- File content
