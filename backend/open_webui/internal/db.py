@@ -48,8 +48,14 @@ class JSONField(types.TypeDecorator):
         if value is not None:
             # Handle Oracle dialect that doesn't have _json_deserializer
             if hasattr(dialect, '_json_deserializer') and dialect._json_deserializer:
+                # If value is already a dict/list, return as-is (Oracle may return already parsed JSON)
+                if isinstance(value, (dict, list)):
+                    return value
                 return dialect._json_deserializer(value)
             else:
+                # If value is already a dict/list, return as-is
+                if isinstance(value, (dict, list)):
+                    return value
                 return json.loads(value)
 
     def copy(self, **kw: Any) -> Self:
